@@ -44,8 +44,10 @@ jobs:
       - name: Decode Keystore
         if: github.event.inputs.build_type == 'release'
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode \
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\r\n ' | base64 --decode \
             > TMessagesProj/config/release.keystore
+          keytool -list -keystore TMessagesProj/config/release.keystore \
+            -storepass "${{ secrets.SIGNING_KEY_STORE_PASSWORD }}" -v 2>&1 | head -5
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -110,7 +112,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cleanup build artifacts
+      - name: Cleanup
         if: always()
         run: |
           rm -rf TMessagesProj/build
